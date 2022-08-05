@@ -24,8 +24,31 @@ public partial class DiscordBot
         return Task.CompletedTask;
     }
 
-    private Task OnReactionAdded(Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel, SocketReaction reaction)
+    private async Task OnReactionAdded(Cacheable<IUserMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel, SocketReaction reaction)
     {
-        return Task.CompletedTask;
+        try
+        {
+            var socketGuildChannel = message.Value.Channel as SocketGuildChannel;
+            ulong? guildId = socketGuildChannel?.Guild.Id;
+
+            if (guildId == null)
+                return;
+
+            GuildChannelConfig? guildChannelConfig = this.GetGuildChannelConfig(guildId.Value, channel.Id);
+            SocketRole? socketRole = guildChannelConfig?.GivingRolesByReaction[reaction.Emote];
+
+            if (socketRole == null)
+                return;
+        
+            SocketGuild guildInfo = this.guildInfos[guildId.Value];
+            SocketGuildUser? socketGuildUser = guildInfo.Users.FirstOrDefault(user => user.Id == reaction.User.Value.Id);
+
+            if (socketGuildUser != null && !socketGuildUser.Roles.Contains(socketRole))
+                await socketGuildUser.AddRoleAsync(socketRole.Id).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 }

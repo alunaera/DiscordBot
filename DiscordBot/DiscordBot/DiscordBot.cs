@@ -38,4 +38,11 @@ public partial class DiscordBot
             Console.WriteLine("Initialize error!");
         }
     }
+
+    private GuildChannelConfig? GetGuildChannelConfig(ulong guildId, ulong channelId)
+    {
+        return this.guildConfigs.TryGetValue(guildId, out GuildConfig? guildConfig) 
+            ? guildConfig.GuildChannelConfigs[channelId] 
+            : null;
+    }
 }
