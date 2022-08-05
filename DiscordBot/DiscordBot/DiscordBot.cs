@@ -6,12 +6,14 @@ public partial class DiscordBot
 {
     private readonly DiscordSocketClient client;
     private readonly IDictionary<ulong, SocketGuild> guildInfos;
+    private readonly IDictionary<ulong, GuildConfig> guildConfigs;
     private Config? config;
 
     public DiscordBot()
     {
-        this.client     = new DiscordSocketClient();
-        this.guildInfos = new ConcurrentDictionary<ulong, SocketGuild>();
+        this.client       = new DiscordSocketClient();
+        this.guildInfos   = new ConcurrentDictionary<ulong, SocketGuild>();
+        this.guildConfigs = new ConcurrentDictionary<ulong, GuildConfig>();
     }
 
     public async Task Initialize()
@@ -20,6 +22,8 @@ public partial class DiscordBot
         {
             string appSettings = await File.ReadAllTextAsync("appsettings.json").ConfigureAwait(false);
             this.config = JsonConvert.DeserializeObject<Config>(appSettings);
+            
+            // TODO Add load guild configs from database
 
             this.client.Log             += this.OnLog;
             this.client.GuildAvailable  += this.OnGuildAvailable;
