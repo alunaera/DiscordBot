@@ -28,23 +28,28 @@ public partial class DiscordBot
     {
         try
         {
-            var socketGuildChannel = message.Value.Channel as SocketGuildChannel;
+            var socketGuildChannel = reaction.Channel as SocketGuildChannel;
             ulong? guildId = socketGuildChannel?.Guild.Id;
 
             if (guildId == null)
                 return;
 
             GuildChannelConfig? guildChannelConfig = this.GetGuildChannelConfig(guildId.Value, channel.Id);
-            SocketRole? socketRole = guildChannelConfig?.GivingRolesByReaction[reaction.Emote];
 
-            if (socketRole == null)
-                return;
-        
-            SocketGuild guildInfo = this.guildInfos[guildId.Value];
-            SocketGuildUser? socketGuildUser = guildInfo.Users.FirstOrDefault(user => user.Id == reaction.User.Value.Id);
+            if (guildChannelConfig != null &&
+                guildChannelConfig.GivingRolesByReaction.TryGetValue(reaction.Emote.Name, out ulong socketRole))
+            {
+                SocketGuild guildInfo = this.guildInfos[guildId.Value];
+                SocketGuildUser? socketGuildUser = guildInfo.Users.FirstOrDefault(user => user.Id == reaction.User.Value.Id);
 
-            if (socketGuildUser != null && !socketGuildUser.Roles.Contains(socketRole))
-                await socketGuildUser.AddRoleAsync(socketRole.Id).ConfigureAwait(false);
+                if (socketGuildUser == null)
+                    return;
+
+                if (socketGuildUser.Roles.FirstOrDefault(role => role.Id == socketRole) != null)
+                    return;
+
+                await socketGuildUser.AddRoleAsync(socketRole).ConfigureAwait(false);
+            }
         }
         catch (Exception e)
         {

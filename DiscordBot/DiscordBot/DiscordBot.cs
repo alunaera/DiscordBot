@@ -41,8 +41,11 @@ public partial class DiscordBot
 
     private GuildChannelConfig? GetGuildChannelConfig(ulong guildId, ulong channelId)
     {
-        return this.guildConfigs.TryGetValue(guildId, out GuildConfig? guildConfig) 
-            ? guildConfig.GuildChannelConfigs[channelId] 
-            : null;
+        this.guildConfigs.TryGetValue(guildId, out GuildConfig? guildConfig);
+
+        GuildChannelConfig? guildChannelConfig = null;
+        guildConfig?.GuildChannelConfigs.TryGetValue(channelId, out guildChannelConfig);
+
+        return guildChannelConfig;
     }
 }
